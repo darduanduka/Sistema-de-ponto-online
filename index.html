@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Bater Ponto</title>
+<style>
+  :root {
+    --azul: #2563eb;
+    --azul-escuro: #1d4ed8;
+    --verde: #16a34a;
+    --vermelho: #dc2626;
+    --laranja: #d97706;
+    --cinza: #6b7280;
+    --fundo: #f4f6fb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--fundo);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    padding: 28px 22px 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: #111827;
+  }
+  .relogio {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--azul);
+    margin: 6px 0 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .data {
+    text-align: center;
+    color: var(--cinza);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+  select {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: 1.5px solid #d1d5db;
+    margin-bottom: 14px;
+    background: #fff;
+  }
+  .proximo {
+    text-align: center;
+    font-size: 13px;
+    color: var(--azul-escuro);
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: none;
+  }
+  button#tirarFoto {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--azul-escuro);
+    background: #eef2ff;
+    border: 1.5px dashed var(--azul);
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  #previewFoto {
+    display: none;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  #previewFoto img {
+    max-width: 100%;
+    max-height: 160px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+  }
+  #previewFoto .refazer {
+    display: block;
+    margin: 6px auto 0;
+    font-size: 12px;
+    color: var(--azul);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  button#bater {
+    width: 100%;
+    padding: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--azul);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background .15s ease, transform .05s ease;
+  }
+  button#bater:active { transform: scale(0.98); }
+  button#bater:disabled { background: #c7d2fe; cursor: not-allowed; }
+  .status {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+  }
+  .status.ok { display: block; background: #dcfce7; color: #166534; }
+  .status.alerta { display: block; background: #fef3c7; color: #92400e; }
+  .status.erro { display: block; background: #fee2e2; color: #991b1b; }
+  .status.info { display: block; background: #e0e7ff; color: #3730a3; }
+  .historico {
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 14px;
+  }
+  .historico h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--cinza);
+    margin: 0 0 10px;
+  }
+  .registro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #eee;
+  }
+  .registro .hora { color: #111827; font-weight: 600; min-width: 56px; }
+  .registro .tipo { flex: 1; color: #374151; }
+  .tagstatus {
+    font-weight: 700;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .tagstatus.Pontual { background: #dcfce7; color: #166534; }
+  .tagstatus.atraso { background: #fee2e2; color: #991b1b; }
+  .tagstatus.antecipada { background: #fef3c7; color: #92400e; }
+  .tagstatus.horaextra { background: #e0e7ff; color: #3730a3; }
+  .tagstatus.neutro { background: #e5e7eb; color: #374151; }
+  .config-aviso {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .fila-aviso {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 12.5px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .fila-aviso button {
+    background: #92400e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>⏱️ Bater Ponto</h1>
+    <div class="relogio" id="relogio">--:--:--</div>
+    <div class="data" id="dataAtual">--</div>
+
+    <label for="funcionario">Funcionário</label>
+    <select id="funcionario">
+      <option value="">Carregando...</option>
+    </select>
+
+    <div class="fila-aviso" id="filaAviso" style="display:none;">
+      <span id="filaTexto"></span>
+      <button id="sincronizarAgora" type="button">Sincronizar agora</button>
+    </div>
+
+    <div class="proximo" id="proximo"></div>
+
+    <button id="tirarFoto" type="button">📷 Tirar foto do local</button>
+    <input type="file" id="inputFoto" accept="image/*" capture="environment" style="display:none;">
+    <div id="previewFoto">
+      <img id="imgPreview" alt="Foto do local">
+      <button class="refazer" id="refazerFoto" type="button">Tirar outra foto</button>
+    </div>
+
+    <button id="bater" disabled>Bater Ponto</button>
+
+    <div class="status" id="status"></div>
+
+    <div class="historico" id="historicoBox" style="display:none;">
+      <h2>Registros de hoje</h2>
+      <div id="historico"></div>
+    </div>
+  </div>
+
+<script>
+  // ======= CONFIGURAÇÃO =======
+  // O navegador NUNCA fala direto com o Apps Script — sempre passa pelo gateway
+  // (Netlify Function), que fica na mesma origem do site (sem CORS/redirect cross-origin).
+  // A URL real do Apps Script fica só no servidor (variável de ambiente APPS_SCRIPT_URL).
+  const URL_BACKEND = "/.netlify/functions/ponto";
+  // =============================
+
+  // Registra o service worker pra página abrir mesmo sem internet
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  // Gera um ID de evento estável (crypto.randomUUID, com fallback pra navegadores antigos)
+  function gerarUUID() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  const TIPOS = ["Entrada", "Saída Almoço", "Volta Almoço", "Saída"];
+
+  // ======= CADASTRO DE FUNCIONÁRIOS (dinâmico, vem do backend) =======
+  const CHAVE_FUNCIONARIOS_CACHE = "funcionariosCache";
+
+  function preencherDropdown(funcionarios) {
+    const select = document.getElementById("funcionario");
+    const atual = select.value;
+    select.replaceChildren();
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Selecione...";
+    select.appendChild(placeholder);
+
+    funcionarios.forEach((f) => {
+      const option = document.createElement("option");
+      option.value = String(f.employeeId || "");
+      option.textContent = String(f.nome || "");
+      select.appendChild(option);
+    });
+
+    if (atual) select.value = atual;
+  }
+
+  async function carregarFuncionarios() {
+    if (!navigator.onLine) {
+      console.log("[ponto][diag] carregarFuncionarios: offline real, indo direto pro cache");
+    } else {
+      try {
+        const resp = await fetch(`${URL_BACKEND}?acao=funcionarios`);
+        console.log("[ponto][diag] funcionarios HTTP", { status: resp.status, ok: resp.ok });
+        const dados = await resp.json();
+        if (dados.ok && dados.funcionarios && dados.funcionarios.length) {
+          preencherDropdown(dados.funcionarios);
+          localStorage.setItem(CHAVE_FUNCIONARIOS_CACHE, JSON.stringify(dados.funcionarios));
+          return;
+        }
+        console.error("[ponto][diag] funcionarios: backend respondeu mas sem lista válida", dados);
+      } catch (erro) {
+        console.error("[ponto][diag] funcionarios: gateway/rede falhou", erro && erro.message);
+      }
+    }
+    const cache = localStorage.getItem(CHAVE_FUNCIONARIOS_CACHE);
+    if (cache) {
+      try { preencherDropdown(JSON.parse(cache)); return; } catch (e) { /* ignora cache corrompido */ }
+    }
+    document.getElementById("funcionario").innerHTML =
+      '<option value="">Sem conexão — abra a página com internet ao menos 1x</option>';
+  }
+
+  // ======= FILA OFFLINE =======
+  const CHAVE_FILA = "filaPontoOffline";
+  const CHAVE_PROXIMO_CONHECIDO = "proximoTipoConhecido";
+  let syncInProgress = false;
+
+  function lerFila() {
+    try { return JSON.parse(localStorage.getItem(CHAVE_FILA) || "[]"); }
+    catch (e) { return []; }
+  }
+  function salvarFila(fila) {
+    localStorage.setItem(CHAVE_FILA, JSON.stringify(fila));
+    atualizarBannerFila();
+  }
+  function guardarNaFila(item) {
+    const fila = lerFila();
+    fila.push(item);
+    salvarFila(fila);
+  }
+  function lerProximosConhecidos() {
+    try { return JSON.parse(localStorage.getItem(CHAVE_PROXIMO_CONHECIDO) || "{}"); }
+    catch (e) { return {}; }
+  }
+  function salvarProximoConhecido(employeeId, tipo) {
+    const mapa = lerProximosConhecidos();
+    mapa[employeeId] = tipo;
+    localStorage.setItem(CHAVE_PROXIMO_CONHECIDO, JSON.stringify(mapa));
+  }
+
+  function atualizarBannerFila() {
+    const fila = lerFila();
+    const aviso = document.getElementById("filaAviso");
+    const texto = document.getElementById("filaTexto");
+    if (fila.length > 0) {
+      aviso.style.display = "flex";
+      texto.textContent = `📴 ${fila.length} ponto(s) aguardando conexão pra sincronizar.`;
+    } else {
+      aviso.style.display = "none";
+    }
+  }
+
+  // Retorna { sucesso, permanente, dados, motivo }.
+  // sucesso=false + permanente=true  → rejeição de negócio (ex: funcionário inativo). NÃO reenfileirar.
+  // sucesso=false + permanente=false → offline/gateway indisponível/timeout/resposta inválida. Pode reenfileirar.
+  // motivo (só pra log técnico, nunca mostrado cru pro funcionário):
+  //   "offline" | "timeout" | "gateway_indisponivel" | "resposta_invalida" | "backend_indisponivel" | "rejeicao_negocio" | "ok"
+  async function enviarAoServidor(payload) {
+    if (!navigator.onLine) {
+      console.log("[ponto][diag] offline real (navigator.onLine=false) — nem tenta o fetch");
+      return { sucesso: false, permanente: false, dados: null, motivo: "offline" };
+    }
+
+    const controlador = new AbortController();
+    const timeoutId = setTimeout(() => controlador.abort(), 15000);
+    console.log("[ponto][diag] POST iniciando", { eventId: payload.eventId, employeeId: payload.employeeId, offline: payload.offline, url: URL_BACKEND });
+
+    let resp;
+    try {
+      resp = await fetch(URL_BACKEND, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload),
+        signal: controlador.signal
+      });
+    } catch (erroFetch) {
+      clearTimeout(timeoutId);
+      const timeoutOcorreu = erroFetch && erroFetch.name === "AbortError";
+      const motivo = timeoutOcorreu ? "timeout" : "gateway_indisponivel";
+      console.error("[ponto][diag] POST falhou ANTES de obter resposta HTTP:", motivo, erroFetch && erroFetch.message);
+      return { sucesso: false, permanente: false, dados: null, motivo };
+    }
+    clearTimeout(timeoutId);
+
+    console.log("[ponto][diag] POST HTTP recebido", { status: resp.status, ok: resp.ok });
+
+    let dados;
+    try {
+      dados = await resp.json();
+    } catch (erroJson) {
+      console.error("[ponto][diag] POST respondeu HTTP mas o corpo NÃO é JSON válido:", erroJson && erroJson.message);
+      return { sucesso: false, permanente: false, dados: null, motivo: "resposta_invalida" };
+    }
+
+    console.log("[ponto][diag] POST JSON:", dados);
+
+    if (!resp.ok) {
+      // Erro de infraestrutura (gateway ou Apps Script fora do ar) — NÃO é rejeição de negócio,
+      // então continua elegível pra reenfileirar/tentar de novo depois.
+      return { sucesso: false, permanente: false, dados, motivo: "backend_indisponivel" };
+    }
+
+    return { sucesso: !!dados.ok, permanente: dados.ok === false, dados, motivo: dados.ok ? "ok" : "rejeicao_negocio" };
+  }
+
+  // Teste manual pelo console: chame window.verificarSaude() no navegador.
+  // Não toca em Sheets/Drive — só confirma se o gateway + Apps Script estão no ar.
+  window.verificarSaude = async function () {
+    console.log("[ponto][diag] health check iniciando em", `${URL_BACKEND}?acao=health`);
+    try {
+      const resp = await fetch(`${URL_BACKEND}?acao=health`);
+      console.log("[ponto][diag] health HTTP", { status: resp.status, ok: resp.ok });
+      const dados = await resp.json();
+      console.log("[ponto][diag] health JSON", dados);
+      return dados;
+    } catch (erro) {
+      console.error("[ponto][diag] health falhou:", erro && erro.message, erro);
+      return null;
+    }
+  };
+
+  function contarPendentesHoje(employeeId) {
+    const hojeStr = new Date().toLocaleDateString("pt-BR");
+    return lerFila().filter((item) => item.employeeId === employeeId && item.diaLocal === hojeStr).length;
+  }
+
+  async function sincronizarFila() {
+    if (syncInProgress) return;
+    if (!navigator.onLine) return;
+    let fila = lerFila();
+    if (!fila.length) return;
+
+    syncInProgress = true;
+    try {
+      const restantes = [];
+      let sincronizados = 0;
+      let falhasPermanentes = 0;
+
+      for (const item of fila) {
+        const resultado = await enviarAoServidor(item);
+        if (resultado.sucesso) {
+          sincronizados++;
+        } else if (resultado.permanente) {
+          falhasPermanentes++;
+          // rejeição definitiva do servidor (ex: funcionário inativo) — não reenfileira
+        } else {
+          restantes.push(item);
+        }
+      }
+      salvarFila(restantes);
+
+      if (sincronizados > 0) {
+        mostrarStatus(`✅ ${sincronizados} ponto(s) pendente(s) sincronizados com sucesso!`, "ok");
+        const funcionarioAtual = document.getElementById("funcionario").value;
+        if (funcionarioAtual) carregarHistorico(funcionarioAtual);
+      }
+      if (falhasPermanentes > 0) {
+        mostrarStatus(`⚠️ ${falhasPermanentes} ponto(s) pendente(s) foram rejeitados pelo servidor e removidos da fila (ex: funcionário inativo).`, "erro");
+      }
+    } finally {
+      syncInProgress = false;
+    }
+  }
+
+  window.addEventListener("online", sincronizarFila);
+  window.addEventListener("load", () => {
+    carregarFuncionarios();
+    atualizarBannerFila();
+    sincronizarFila();
+    setInterval(sincronizarFila, 30000);
+  });
+  document.getElementById("sincronizarAgora").addEventListener("click", sincronizarFila);
+  // =============================
+
+  function atualizarRelogio() {
+    const agora = new Date();
+    document.getElementById("relogio").textContent = agora.toLocaleTimeString("pt-BR");
+    document.getElementById("dataAtual").textContent = agora.toLocaleDateString("pt-BR", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric"
+    });
+  }
+  atualizarRelogio();
+  setInterval(atualizarRelogio, 1000);
+
+  const btnBater = document.getElementById("bater");
+  const statusBox = document.getElementById("status");
+  const btnTirarFoto = document.getElementById("tirarFoto");
+  const inputFoto = document.getElementById("inputFoto");
+  const previewFoto = document.getElementById("previewFoto");
+  const imgPreview = document.getElementById("imgPreview");
+  const refazerFoto = document.getElementById("refazerFoto");
+
+  let fotoBase64 = null;
+
+  function mostrarStatus(texto, tipo) {
+    statusBox.className = "status " + tipo;
+    statusBox.textContent = texto;
+  }
+
+  function classeDoStatus(status) {
+    if (!status) return "neutro";
+    if (status.indexOf("Atrasado") === 0) return "atraso";
+    if (status.indexOf("Saída antecipada") === 0) return "antecipada";
+    if (status.indexOf("Hora extra") === 0) return "horaextra";
+    if (status === "Pontual") return "Pontual";
+    return "neutro";
+  }
+
+  function atualizarBotao() {
+    btnBater.disabled = !(document.getElementById("funcionario").value && fotoBase64);
+  }
+
+  // ---- Captura e redimensiona a foto no navegador antes de enviar ----
+  btnTirarFoto.addEventListener("click", () => inputFoto.click());
+
+  inputFoto.addEventListener("change", () => {
+    const arquivo = inputFoto.files[0];
+    if (!arquivo) return;
+    const leitor = new FileReader();
+    leitor.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxLargura = 800;
+        const escala = Math.min(1, maxLargura / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * escala;
+        canvas.height = img.height * escala;
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        fotoBase64 = canvas.toDataURL("image/jpeg", 0.6);
+        imgPreview.src = fotoBase64;
+        previewFoto.style.display = "block";
+        btnTirarFoto.style.display = "none";
+        atualizarBotao();
+      };
+      img.src = ev.target.result;
+    };
+    leitor.readAsDataURL(arquivo);
+  });
+
+  refazerFoto.addEventListener("click", () => {
+    fotoBase64 = null;
+    previewFoto.style.display = "none";
+    btnTirarFoto.style.display = "block";
+    inputFoto.value = "";
+    atualizarBotao();
+  });
+
+  function obterLocalizacao() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { timeout: 4000 }
+      );
+    });
+  }
+
+  async function carregarHistorico(employeeId) {
+    if (!employeeId) return;
+    const proximo = document.getElementById("proximo");
+    try {
+      const resp = await fetch(`${URL_BACKEND}?acao=historico&employeeId=${encodeURIComponent(employeeId)}`);
+      const dados = await resp.json();
+      const box = document.getElementById("historico");
+      const wrap = document.getElementById("historicoBox");
+
+      if (dados.proximoTipo) {
+        salvarProximoConhecido(employeeId, dados.proximoTipo);
+        const pendentes = contarPendentesHoje(employeeId);
+        const indice = (TIPOS.indexOf(dados.proximoTipo) + pendentes) % TIPOS.length;
+        proximo.style.display = "block";
+        proximo.textContent = `Próximo registro: ${TIPOS[indice]}`;
+      }
+
+      if (dados.registros && dados.registros.length) {
+        wrap.style.display = "block";
+        box.innerHTML = dados.registros.map((r) => {
+          const classe = classeDoStatus(r.status);
+          const rotulo = r.status === "-" ? "" : `<span class="tagstatus ${classe}">${r.status}</span>`;
+          return `<div class="registro"><span class="hora">${r.hora}</span><span class="tipo">${r.tipo}</span>${rotulo}</div>`;
+        }).join("");
+      } else {
+        wrap.style.display = "none";
+      }
+    } catch (e) {
+      // Offline: estima o próximo tipo com base no último dado conhecido + pendentes na fila
+      const mapa = lerProximosConhecidos();
+      const baseConhecida = mapa[employeeId] ? TIPOS.indexOf(mapa[employeeId]) : 0;
+      const pendentes = contarPendentesHoje(employeeId);
+      const indice = (baseConhecida + pendentes) % TIPOS.length;
+      proximo.style.display = "block";
+      proximo.textContent = `Próximo registro (estimado, offline): ${TIPOS[indice]}`;
+    }
+  }
+
+  document.getElementById("funcionario").addEventListener("change", (e) => {
+    carregarHistorico(e.target.value);
+    atualizarBotao();
+  });
+
+  btnBater.addEventListener("click", async () => {
+    if (btnBater.disabled) return; // defesa extra contra double-tap
+
+    const selectFuncionario = document.getElementById("funcionario");
+    const employeeId = selectFuncionario.value;
+    const nomeSelecionado = selectFuncionario.selectedOptions[0] ? selectFuncionario.selectedOptions[0].textContent : "";
+
+    if (!employeeId) {
+      mostrarStatus("Selecione seu nome antes de bater o ponto.", "erro");
+      return;
+    }
+    if (!fotoBase64) {
+      mostrarStatus("Tire uma foto do local antes de bater o ponto.", "erro");
+      return;
+    }
+    // Desabilita IMEDIATAMENTE (antes de qualquer await) — defesa extra contra double-tap.
+    // Isso não substitui eventId + LockService no servidor, é só uma camada a mais.
+    btnBater.disabled = true;
+    mostrarStatus("Registrando...", "info");
+
+    const eventId = gerarUUID();
+    const localizacao = await obterLocalizacao();
+    const agora = new Date();
+
+    const payload = {
+      eventId,
+      employeeId,
+      funcionario: nomeSelecionado, // só apresentação/auditoria — o servidor não confia nisso
+      lat: localizacao ? localizacao.lat : "",
+      lng: localizacao ? localizacao.lng : "",
+      foto: fotoBase64,
+      timestampCliente: agora.toISOString(),
+      diaLocal: agora.toLocaleDateString("pt-BR"),
+      offline: true
+    };
+
+    const resetarFoto = () => {
+      fotoBase64 = null;
+      previewFoto.style.display = "none";
+      btnTirarFoto.style.display = "block";
+      inputFoto.value = "";
+    };
+
+    if (!navigator.onLine) {
+      // Já sabemos que não tem internet: nem tenta, guarda direto na fila (mesmo eventId será reusado na sincronização)
+      guardarNaFila(payload);
+      mostrarStatus("📥 Sem conexão — ponto salvo no celular. Será enviado automaticamente quando a internet voltar.", "alerta");
+      resetarFoto();
+      atualizarBotao();
+      return;
+    }
+
+    const resultado = await enviarAoServidor({ ...payload, offline: false });
+
+    if (resultado.sucesso) {
+      const dados = resultado.dados;
+      let classe = "alerta";
+      if (dados.status === "Pontual" || dados.status === "-") classe = "ok";
+      else if (dados.status && dados.status.indexOf("Hora extra") === 0) classe = "info";
+      const sufixo = dados.status && dados.status !== "-" ? ` (${dados.status})` : "";
+      let mensagem = `✅ ${dados.tipo} registrada às ${dados.hora}${sufixo}`;
+      if (dados.avisoFoto) mensagem += ` — ⚠️ ${dados.avisoFoto}`;
+      mostrarStatus(mensagem, classe);
+      resetarFoto();
+      carregarHistorico(employeeId);
+    } else if (resultado.permanente) {
+      // Rejeição definitiva do servidor (ex: funcionário inativo/inexistente) — não guarda na fila
+      mostrarStatus("❌ " + ((resultado.dados && resultado.dados.erro) || "Não foi possível registrar o ponto."), "erro");
+      resetarFoto();
+    } else {
+      // Falha de rede/gateway/timeout/instabilidade: guarda na fila com o MESMO eventId pra sincronizar depois.
+      // Motivo técnico completo já foi pro console (resultado.motivo) — pro funcionário, mensagem simples.
+      guardarNaFila(payload);
+      const mensagem = resultado.motivo === "timeout"
+        ? "📥 Conexão lenta demais — ponto salvo no celular. Será enviado automaticamente."
+        : "📥 Sem conexão — ponto salvo no celular. Será enviado automaticamente quando a internet voltar.";
+      mostrarStatus(mensagem, "alerta");
+      resetarFoto();
+    }
+    atualizarBotao();
+  });
+</script>
+</body>
+</html>
